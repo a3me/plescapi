@@ -13,7 +13,7 @@ env:
   DEPLOYMENT_NAME: 'plescapi'
   REPOSITORY: 'plesc-455015'
   IMAGE: 'plescapi'
-  WORKLOAD_IDENTITY_PROVIDER: 'projects/316744216718/locations/global/workloadIdentityPools/github/providers/plescapi'
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/316744216718/locations/global/workloadIdentityPools/github-actions/providers/plescapi'
 
 jobs:
   setup-build-publish-deploy:
