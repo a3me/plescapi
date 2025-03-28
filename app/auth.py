@@ -1,4 +1,5 @@
 import jwt
+import json
 import requests
 from fastapi import APIRouter, HTTPException, Request
 from google.oauth2 import id_token
@@ -10,23 +11,29 @@ router = APIRouter()
 def verify_google_token(token: str):
     try:
         payload = id_token.verify_oauth2_token(token, google_requests.Request(), settings.google_client_id)
-        
         email = payload["email"]
         name = payload.get("name")
         sub = payload["sub"]
-
         # here we should check if the email is in the database
         # if not, we should create a new user
         # if yes, we grab the user from the database
-
         return {"email": email, "name": name, "sub": sub}
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid Google token")
 
 @router.post("/login/google")
 async def login_google(token: str):
-    user = verify_google_token(token)
-    return {"access_token": jwt.encode(user, settings.secret_key, algorithm=settings.algorithm)}
+    try:
+        # decode the token as json
+        payload = json.loads(token)
+        # get the access token from the payload
+        token = payload["access_token"]
+        if not token:
+            raise Exception("No access token found in payload")
+        user = verify_google_token(token)
+        return user
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid Google token")
 
 @router.get("/login/callback")
 async def oauth_callback(request: Request):
