@@ -10,33 +10,23 @@ router = APIRouter()
 def verify_google_token(token: str):
     try:
         payload = id_token.verify_oauth2_token(token, google_requests.Request(), settings.google_client_id)
-        return {"email": payload["email"], "name": payload.get("name"), "sub": payload["sub"]}
+        
+        email = payload["email"]
+        name = payload.get("name")
+        sub = payload["sub"]
+
+        # here we should check if the email is in the database
+        # if not, we should create a new user
+        # if yes, we grab the user from the database
+
+        return {"email": email, "name": name, "sub": sub}
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid Google token")
-
-# def verify_apple_token(token: str):
-#     try:
-#         headers = jwt.get_unverified_header(token)
-#         public_keys = requests.get("https://appleid.apple.com/auth/keys").json()
-#         key = next((k for k in public_keys["keys"] if k["kid"] == headers["kid"]), None)
-        
-#         if not key:
-#             raise HTTPException(status_code=401, detail="Invalid Apple token")
-
-#         decoded = jwt.decode(token, key, algorithms=["RS256"], audience=settings.apple_client_id)
-#         return {"email": decoded.get("email"), "sub": decoded["sub"]}
-#     except Exception:
-#         raise HTTPException(status_code=401, detail="Invalid Apple token")
 
 @router.post("/login/google")
 async def login_google(token: str):
     user = verify_google_token(token)
     return {"access_token": jwt.encode(user, settings.secret_key, algorithm=settings.algorithm)}
-
-# @router.post("/login/apple")
-# async def login_apple(token: str):
-#     user = verify_apple_token(token)
-#     return {"access_token": jwt.encode(user, settings.secret_key, algorithm=settings.algorithm)}
 
 @router.get("/login/callback")
 async def oauth_callback(request: Request):
@@ -55,15 +45,6 @@ async def oauth_callback(request: Request):
             "grant_type": "authorization_code",
             "redirect_uri": "http://localhost:8000/auth/callback"  # Change for production
         }
-    # elif provider == "apple":
-    #     token_url = "https://appleid.apple.com/auth/token"
-    #     data = {
-    #         "client_id": settings.apple_client_id,
-    #         "client_secret": settings.apple_client_secret,
-    #         "code": code,
-    #         "grant_type": "authorization_code",
-    #         "redirect_uri": "http://localhost:8000/auth/callback"
-    #     }
     else:
         raise HTTPException(status_code=400, detail="Invalid provider")
     
