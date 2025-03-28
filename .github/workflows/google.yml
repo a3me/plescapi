@@ -29,7 +29,7 @@ jobs:
         uses: 'google-github-actions/setup-gcloud@1bee7de035d65ec5da40a31f8589e240eba8fde5'
         with:
           service_account_key: ${{ secrets.GKE_SA_KEY }}
-          project_id: $PROJECT_ID
+          project_id: '${{ env.PROJECT_ID }}'
       - run: |-
           gcloud --quiet auth configure-docker
 
