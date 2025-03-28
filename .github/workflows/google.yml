@@ -47,9 +47,7 @@ jobs:
           echo "CLOUDSDK_PROJECT: $CLOUDSDK_PROJECT"
           echo "GCLOUD_PROJECT: $GCLOUD_PROJECT"
           echo "Active Account:"
-          gcloud auth list --filter=status:ACTIVE --format="value(account)"
-          echo "Current IAM Policy:"
-          gcloud projects get-iam-policy $PROJECT_ID --format="json"
+          gcloud auth list --format="value(account)"
 
       # Authenticate Docker to Google Cloud Artifact Registry
       - name: 'Docker Auth'
