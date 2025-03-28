@@ -65,6 +65,7 @@ jobs:
       # Deploy the Docker image to the GKE cluster
       - name: 'Deploy to GKE'
         run: |-
+          sed -i "s/\${GITHUB_SHA}/${GITHUB_SHA}/g" deployment.yml
           kubectl apply -f deployment.yml
           kubectl apply -f service.yml
           kubectl get pods

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: plescapi
-        image: us-central1-docker.pkg.dev/plesc-455015/plesc-docker/plescapi:latest
+        image: us-central1-docker.pkg.dev/plesc-455015/plesc-docker/plescapi:${GITHUB_SHA}
         ports:
         - containerPort: 8000
         env:
