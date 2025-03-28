@@ -1,5 +1,6 @@
 import jwt
 import json
+from pydantic import BaseModel
 import requests
 from fastapi import APIRouter, HTTPException, Request
 from google.oauth2 import id_token
@@ -20,17 +21,17 @@ def verify_google_token(token: str):
         return {"email": email, "name": name, "sub": sub}
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid Google token")
+    
+
+class TokenPayload(BaseModel):
+    access_token: str
 
 @router.post("/login/google")
-async def login_google(token: str):
+async def login_google(token: TokenPayload):
     try:
-        # decode the token as json
-        payload = json.loads(token)
-        # get the access token from the payload
-        token = payload["access_token"]
-        if not token:
+        if not token.access_token:
             raise Exception("No access token found in payload")
-        user = verify_google_token(token)
+        user = verify_google_token(token.access_token)
         return user
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid Google token")
