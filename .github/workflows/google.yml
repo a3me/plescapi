@@ -40,6 +40,17 @@ jobs:
           project_id: '${{ env.PROJECT_ID }}'
           workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
 
+      - name: 'Debug Google Cloud Credentials'
+        run: |
+          echo "GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS"
+          echo "PROJECT_ID: $PROJECT_ID"
+          echo "CLOUDSDK_PROJECT: $CLOUDSDK_PROJECT"
+          echo "GCLOUD_PROJECT: $GCLOUD_PROJECT"
+          echo "Active Account:"
+          gcloud auth list --filter=status:ACTIVE --format="value(account)"
+          echo "Current IAM Policy:"
+          gcloud projects get-iam-policy $PROJECT_ID --format="json"
+
       # Authenticate Docker to Google Cloud Artifact Registry
       - name: 'Docker Auth'
         uses: 'docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567' # docker/login-action@v3
