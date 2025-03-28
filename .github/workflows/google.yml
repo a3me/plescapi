@@ -11,7 +11,7 @@ env:
   GKE_CLUSTER: 'eva-01'
   GKE_ZONE: 'us-central1-c'
   DEPLOYMENT_NAME: 'plescapi'
-  REPOSITORY: 'plesc-455015'
+  REPOSITORY: 'plesc-docker'
   IMAGE: 'plescapi'
   WORKLOAD_IDENTITY_PROVIDER: 'projects/316744216718/locations/global/workloadIdentityPools/github-actions/providers/plescapi'
 
