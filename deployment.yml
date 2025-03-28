@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plescapi
+  labels:
+    app: plescapi
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: plescapi
+  template:
+    metadata:
+      labels:
+        app: plescapi
+    spec:
+      containers:
+      - name: plescapi
+        image: us-central1-docker.pkg.dev/plesc-455015/plesc-docker/plescapi:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: google-client-id
+              key: value
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: google-client-secret
+              key: value
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
