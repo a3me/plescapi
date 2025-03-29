@@ -35,6 +35,11 @@ spec:
             secretKeyRef:
               name: google-client-secret
               key: value
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: gemini-api-key
+              key: value
         resources:
           requests:
             cpu: "100m"
