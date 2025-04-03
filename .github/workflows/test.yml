@@ -1,10 +1,10 @@
-name: Python Tests
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ '**' ]
 
 jobs:
   test:
@@ -56,4 +56,9 @@ jobs:
       if: always()
       run: |
         firebase emulators:export ./emulator-data
-        firebase emulators:stop 
+        firebase emulators:stop
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/google.yml 

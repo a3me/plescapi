@@ -1,9 +1,7 @@
 name: 'Build and Deploy to GKE'
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
 
 env:
   PROJECT_ID: 'plesc-455015'
