@@ -2,6 +2,8 @@ version: "3.8"
 
 services:
   plescapi:
+    volumes:
+      - /Users/matt/Desktop/plesc-455015-5e588ea78c9c.json:/app/plesc-455015-5e588ea78c9c.json
     develop:
       watch:
         - action: rebuild

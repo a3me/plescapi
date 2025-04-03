@@ -1,0 +1,59 @@
+name: Python Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Install Firebase CLI
+      run: |
+        curl -sL https://firebase.tools | bash
+        firebase --version
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Start Firestore emulator
+      run: |
+        firebase init emulators --project demo-test
+        firebase emulators:start --only firestore &
+        sleep 5  # Give the emulator time to start
+
+    - name: Run tests
+      env:
+        GOOGLE_CLIENT_ID: test-client-id
+        GOOGLE_CLIENT_SECRET: test-client-secret
+        GEMINI_API_KEY: test-gemini-key
+        GOOGLE_PROJECT_ID: test-project-id
+        FIRESTORE_EMULATOR_HOST: localhost:8080
+        SECRET_KEY: test-secret-key
+        ALGORITHM: HS256
+      run: |
+        pytest tests/ -v
+
+    - name: Stop emulators
+      if: always()
+      run: |
+        firebase emulators:export ./emulator-data
+        firebase emulators:stop 

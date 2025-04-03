@@ -2,12 +2,15 @@ import jwt
 import json
 from pydantic import BaseModel
 import requests
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Response
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from app.config import settings
+from google.cloud import firestore
 
 router = APIRouter()
+db = firestore.Client()
+users_collection = db.collection("users")
 
 def verify_google_token(token: str):
     try:
@@ -15,13 +18,31 @@ def verify_google_token(token: str):
         email = payload["email"]
         name = payload.get("name")
         sub = payload["sub"]
-        # here we should check if the email is in the database
-        # if not, we should create a new user
-        # if yes, we grab the user from the database
-        return {"email": email, "name": name, "sub": sub}
-    except Exception:
+
+        # Check if user exists in Firestore
+        user_ref = users_collection.document(email)
+        user_data = user_ref.get()
+
+        if not user_data.exists:
+            # Create new user if they don't exist
+            user_ref.set({
+                "email": email,
+                "name": name,
+                "google_sub": sub,
+                "created_at": firestore.SERVER_TIMESTAMP,
+                "last_login": firestore.SERVER_TIMESTAMP,
+            })
+        else:
+            # Update last login for existing user
+            user_ref.update({
+                "last_login": firestore.SERVER_TIMESTAMP,
+            })
+
+        # Return the Google token directly
+        return {"token": token}
+    except Exception as e:
+        print(f"Error in verify_google_token: {e}")
         raise HTTPException(status_code=401, detail="Invalid Google token")
-    
 
 class TokenPayload(BaseModel):
     access_token: str
@@ -31,8 +52,7 @@ async def login_google(token: TokenPayload):
     try:
         if not token.access_token:
             raise Exception("No access token found in payload")
-        user = verify_google_token(token.access_token)
-        return user
+        return verify_google_token(token.access_token)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid Google token")
 
@@ -73,5 +93,5 @@ async def oauth_callback(request: Request):
     return {
         "email": user_info.get("email"),
         "name": user_info.get("name", "Apple User"),
-        "jwt": jwt.encode(user_info, settings.secret_key, algorithm=settings.algorithm)
+        "token": token_data["access_token"]
     }
