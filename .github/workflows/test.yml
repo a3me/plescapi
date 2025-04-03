@@ -36,7 +36,6 @@ jobs:
 
     - name: Start Firestore emulator
       run: |
-        firebase init emulators --project demo-test
         firebase emulators:start --only firestore &
         sleep 5  # Give the emulator time to start
 
