@@ -2,6 +2,10 @@ name: 'Build and Deploy to GKE'
 
 on:
   workflow_call:
+    secrets:
+      GKE_SA_KEY:
+        required: true
+        description: 'Google Cloud Service Account Key'
 
 env:
   PROJECT_ID: 'plesc-455015'
