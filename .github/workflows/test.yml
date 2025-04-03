@@ -54,7 +54,6 @@ jobs:
     - name: Stop emulators
       if: always()
       run: |
-        firebase emulators:export ./emulator-data
         firebase emulators:stop
 
   deploy:
