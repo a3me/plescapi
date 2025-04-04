@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, HTTPException
 from app.auth import router as auth_router
 from app.routes.chat import router as chat_router
 from app.routes.users import router as users_router
+from app.routes.bots import router as bots_router
 import time
 from app.config import settings
 
@@ -9,6 +10,7 @@ app = FastAPI(title="Pleść API")
 app.include_router(auth_router, prefix="/auth")
 app.include_router(chat_router, prefix="/chat")
 app.include_router(users_router, prefix="/users")
+app.include_router(bots_router, prefix="/bots")
 
 @app.get("/")
 async def root():
