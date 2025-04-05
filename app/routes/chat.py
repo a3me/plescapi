@@ -6,6 +6,7 @@ from google.cloud import firestore
 from uuid import uuid4
 from app.dependencies import get_current_user, get_firestore
 from pydantic import BaseModel
+from datetime import datetime, UTC
 
 class Message(BaseModel):
     message: str
@@ -47,7 +48,21 @@ async def get_chats(current_user: dict = Depends(get_current_user), db: firestor
     """Fetch all chats for a user from Firestore."""
     chats_collection = db.collection("chats")
     chats_ref = chats_collection.where(filter=firestore.FieldFilter("user_id", "==", current_user["email"])).get()
-    return [chat.to_dict() for chat in chats_ref]
+    
+    chats = []
+    for chat in chats_ref:
+        chat_data = chat.to_dict()
+        chat_data["id"] = chat.id  # Add the chat ID to the response
+        
+        # Get bot information
+        bot_ref = db.collection("bots").document(chat_data["bot_id"]).get()
+        if bot_ref.exists:
+            bot_data = bot_ref.to_dict()
+            chat_data["bot"] = bot_data
+        
+        chats.append(chat_data)
+    
+    return chats
 
 @router.get("/{chat_id}")
 async def get_chat(chat_id: str, current_user: dict = Depends(get_current_user), db: firestore.Client = Depends(get_firestore)):
@@ -79,7 +94,12 @@ async def send_message(chat_id: str, message: Message, current_user: dict = Depe
 
     # Restore chat context
     chat_history = chat_dict.get("messages", [])
-    chat_history.append({"role": "user", "content": message.message})
+    current_time = datetime.now(UTC)
+    chat_history.append({
+        "role": "user", 
+        "content": message.message,
+        "timestamp": current_time
+    })
     chat_ref.update({"messages": chat_history})
     
     # Format chat history for Gemini API
@@ -100,7 +120,11 @@ async def send_message(chat_id: str, message: Message, current_user: dict = Depe
         raise HTTPException(status_code=400, detail="No response from model.")
     
     # Append messages to chat history
-    chat_history.append({"role": "assistant", "content": response.text})
+    chat_history.append({
+        "role": "assistant", 
+        "content": response.text,
+        "timestamp": current_time
+    })
     chat_ref.update({"messages": chat_history})
 
     return {"response": response.text}

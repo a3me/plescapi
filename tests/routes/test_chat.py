@@ -126,10 +126,20 @@ async def test_get_chats_success(test_firestore, test_client, mock_current_user,
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
+    assert data[0]["id"] == chat_id
     assert data[0]["user_id"] == mock_current_user["email"]
     assert data[0]["bot_id"] == setup_bot
     assert data[0]["bot_prompt"] == MOCK_BOT["prompt"]
     assert data[0]["messages"] == []
+    
+    # Verify bot information is included
+    assert "bot" in data[0]
+    assert data[0]["bot"]["id"] == MOCK_BOT["id"]
+    assert data[0]["bot"]["name"] == MOCK_BOT["name"]
+    assert data[0]["bot"]["description"] == MOCK_BOT["description"]
+    assert data[0]["bot"]["prompt"] == MOCK_BOT["prompt"]
+    assert data[0]["bot"]["image_url"] == MOCK_BOT["image_url"]
+    assert data[0]["bot"]["created_by"] == mock_current_user["email"]
 
 @pytest.mark.asyncio
 async def test_get_chat_success(test_firestore, test_client, mock_current_user, setup_bot):
@@ -215,10 +225,21 @@ async def test_send_message_success(test_firestore, test_client, mock_current_us
         # Verify message was added to chat history
         chat_data = chat_ref.get().to_dict()
         assert len(chat_data["messages"]) == 2  # User message and bot response
+        
+        # Verify user message
         assert chat_data["messages"][0]["role"] == "user"
         assert chat_data["messages"][0]["content"] == "Hello, bot!"
+        assert "timestamp" in chat_data["messages"][0]
+        assert isinstance(chat_data["messages"][0]["timestamp"], datetime)
+        
+        # Verify bot response
         assert chat_data["messages"][1]["role"] == "assistant"
         assert chat_data["messages"][1]["content"] == mock_gemini_response.text
+        assert "timestamp" in chat_data["messages"][1]
+        assert isinstance(chat_data["messages"][1]["timestamp"], datetime)
+        
+        # Verify timestamps are present and in order
+        assert chat_data["messages"][0]["timestamp"] <= chat_data["messages"][1]["timestamp"]
 
 @pytest.mark.asyncio
 async def test_send_message_chat_not_found(test_firestore, test_client, mock_current_user):
