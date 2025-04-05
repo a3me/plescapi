@@ -11,12 +11,6 @@ from datetime import datetime, UTC
 class Message(BaseModel):
     message: str
 
-instructions = """
-You are a help Polish tutor. You respond in Polish, using simple sentences and short answers. Your name is Pleść.
-Your main task is to help the user learn Polish by having a conversation with them.
-You will also provide definitions and explanations of Polish words in English if the user asks for them.
-"""
-
 router = APIRouter()
 client = genai.Client(api_key=settings.gemini_api_key)
 
@@ -101,6 +95,14 @@ async def send_message(chat_id: str, message: Message, current_user: dict = Depe
     if chat_dict["user_id"] != current_user["email"]:
         raise HTTPException(status_code=403, detail="Not authorized to access this chat")
 
+    # Get the bot's current prompt
+    bot_ref = db.collection("bots").document(chat_dict["bot_id"]).get()
+    if not bot_ref.exists:
+        raise HTTPException(status_code=404, detail="Bot not found")
+    
+    bot_data = bot_ref.to_dict()
+    bot_prompt = bot_data["prompt"]
+
     # Restore chat context
     chat_history = chat_dict.get("messages", [])
     current_time = datetime.now(UTC)
@@ -121,7 +123,7 @@ async def send_message(chat_id: str, message: Message, current_user: dict = Depe
     
     response = client.models.generate_content(
         model="gemini-2.0-flash", 
-        config=types.GenerateContentConfig(response_mime_type="text/plain", system_instruction=instructions),
+        config=types.GenerateContentConfig(response_mime_type="text/plain", system_instruction=bot_prompt),
         contents=formatted_history
     )
     
