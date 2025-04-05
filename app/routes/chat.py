@@ -76,6 +76,15 @@ async def get_chat(chat_id: str, current_user: dict = Depends(get_current_user),
     if chat_data["user_id"] != current_user["email"]:
         raise HTTPException(status_code=403, detail="Not authorized to access this chat")
     
+    # Add chat ID to response
+    chat_data["id"] = chat_id
+    
+    # Get bot information
+    bot_ref = db.collection("bots").document(chat_data["bot_id"]).get()
+    if bot_ref.exists:
+        bot_data = bot_ref.to_dict()
+        chat_data["bot"] = bot_data
+    
     return chat_data
 
 @router.post("/{chat_id}/message")

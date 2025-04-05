@@ -159,10 +159,20 @@ async def test_get_chat_success(test_firestore, test_client, mock_current_user, 
     # Verify
     assert response.status_code == 200
     data = response.json()
+    assert data["id"] == chat_id
     assert data["user_id"] == mock_current_user["email"]
     assert data["bot_id"] == setup_bot
     assert data["bot_prompt"] == MOCK_BOT["prompt"]
     assert data["messages"] == []
+    
+    # Verify bot information is included
+    assert "bot" in data
+    assert data["bot"]["id"] == MOCK_BOT["id"]
+    assert data["bot"]["name"] == MOCK_BOT["name"]
+    assert data["bot"]["description"] == MOCK_BOT["description"]
+    assert data["bot"]["prompt"] == MOCK_BOT["prompt"]
+    assert data["bot"]["image_url"] == MOCK_BOT["image_url"]
+    assert data["bot"]["created_by"] == mock_current_user["email"]
 
 @pytest.mark.asyncio
 async def test_get_chat_not_found(test_firestore, test_client, mock_current_user):
