@@ -54,8 +54,7 @@ async def create_bot(
     
     # Return with formatted datetime
     return {
-        **bot_data,
-        "created_at": format_datetime(now)
+        "id": bot_id
     }
 
 @router.get("")
